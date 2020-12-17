@@ -4,7 +4,6 @@ import (
 	"crypto/x509"
 	"encoding/pem"
 	"fmt"
-	"io/ioutil"
 	"log"
 	"net/http"
 
@@ -36,12 +35,10 @@ func loadPublicKey(data []byte) (interface{}, error) {
 	return nil, fmt.Errorf("square/go-jose: parse error, got '%s' and '%s'", err0, err1)
 }
 
-func Auth0(keyFilePath string, audience []string, issuer string) gin.HandlerFunc {
-	data, err := ioutil.ReadFile(keyFilePath)
-	if err != nil {
-		panic("Impossible to read key from disk")
-	}
-	secret, err := loadPublicKey(data)
+const Subject = "subject"
+
+func Auth0(certificate string, audience []string, issuer string) gin.HandlerFunc {
+	secret, err := loadPublicKey([]byte(certificate))
 	if err != nil {
 		panic("Invalid provided key")
 	}
@@ -66,6 +63,7 @@ func Auth0(keyFilePath string, audience []string, issuer string) gin.HandlerFunc
 			log.Println("Invalid claims:", err)
 			return
 		}
+		c.Set(Subject, claims["sub"])
 		c.Next()
 	})
 }

@@ -1,15 +1,27 @@
 package main
 
 import (
+	"os"
+
 	"github.com/gin-gonic/gin"
 
-	"github.com/CedricThomas/22h31-FaisLesBacks/internal/pkg/middleware"
+	"github.com/CedricThomas/22h31-FaisLesBacks/internal/pkg/config"
+	"github.com/CedricThomas/22h31-FaisLesBacks/internal/router"
 )
 
 func main() {
-	r := gin.Default()
-	r.GET("/", middleware.Auth0("./dev-dgoly5h6.pem", []string{"casseur_flutter"}, "https://dev-dgoly5h6.eu.auth0.com/"), func(c *gin.Context) {
-		c.JSON(200, gin.H{"test": "ok"})
-	})
-	r.Run(":9090")
+	logger := newLogger()
+	cfg, err := config.NewConfig()
+	if err != nil {
+		logger.WithError(err).Error("unable to parse config")
+		os.Exit(1)
+	}
+	logger.WithField("config", cfg.String()).Info("configuration loaded")
+	engine := gin.Default()
+	r := router.NewRouter(logger, engine, cfg)
+	r.RegisterRoute()
+	if err := engine.Run(cfg.Port); err != nil {
+		logger.WithError(err).Error("runtime error")
+		os.Exit(1)
+	}
 }
