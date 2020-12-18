@@ -1,6 +1,10 @@
 package memo
 
-import "github.com/brianloveswords/airtable"
+import (
+	"github.com/brianloveswords/airtable"
+
+	"github.com/CedricThomas/22h31-FaisLesBacks/api/model"
+)
 
 type (
 	Fields struct {
@@ -16,4 +20,13 @@ type (
 
 func (Memo) TableName() string {
 	return "memo"
+}
+
+func (m *Memo) ToModel() *model.Memo {
+	return &model.Memo{
+		Id:        m.ID,
+		CreatedAt: m.CreatedTime,
+		Title:     m.Fields.Title,
+		Content:   m.Fields.Content,
+	}
 }

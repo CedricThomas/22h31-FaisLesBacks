@@ -6,6 +6,6 @@ type Store interface {
 	NewMemo(title, content, userId string) (*memo.Memo, error)
 	GetMemo(memoId string) (*memo.Memo, error)
 	ListMemo(userId string) ([]memo.Memo, error)
-	UpdateMemo(memoId string, memo *memo.Memo) (*memo.Memo, error)
-	DeleteMemo(memoId string) (*memo.Memo, error)
+	UpdateMemo(memoId string, memo *memo.Fields) (*memo.Memo, error)
+	DeleteMemo(memoId string) error
 }
