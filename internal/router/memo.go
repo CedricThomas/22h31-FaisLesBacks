@@ -7,6 +7,7 @@ import (
 
 	"github.com/CedricThomas/22h31-FaisLesBacks/api/model"
 	"github.com/CedricThomas/22h31-FaisLesBacks/internal/pkg/middleware"
+	modelstore "github.com/CedricThomas/22h31-FaisLesBacks/internal/store/model"
 	"github.com/CedricThomas/22h31-FaisLesBacks/internal/store/model/memo"
 )
 
@@ -56,13 +57,17 @@ func (r *Router) handleGetMemo(c *gin.Context) {
 		return
 	}
 	mem, err := r.store.GetMemo(memoId)
-	if err != nil {
+	if err == modelstore.NoSuchEntity {
+		logger.WithError(err).Error("unable to find memo in the store")
+		c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
+		return
+	} else if err != nil {
 		logger.WithError(err).Error("unable to get memo from the store")
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 	if mem.Fields.UserId != c.MustGet(middleware.Subject).(string) {
-		c.JSON(http.StatusNotFound, gin.H{"error": "the memo was not found"})
+		c.JSON(http.StatusNotFound, gin.H{"error": modelstore.NoSuchEntity.Error()})
 		return
 	}
 	c.JSON(http.StatusOK, mem.ToModel())
@@ -77,13 +82,17 @@ func (r *Router) handleUpdateMemo(c *gin.Context) {
 		return
 	}
 	mem, err := r.store.GetMemo(memoId)
-	if err != nil {
+	if err == modelstore.NoSuchEntity {
+		logger.WithError(err).Error("unable to find memo in the store")
+		c.JSON(http.StatusNotFound, gin.H{"error": modelstore.NoSuchEntity.Error()})
+		return
+	} else if err != nil {
 		logger.WithError(err).Error("unable to get memo from the store")
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 	if mem.Fields.UserId != c.MustGet(middleware.Subject).(string) {
-		c.JSON(http.StatusNotFound, gin.H{"error": "the memo was not found"})
+		c.JSON(http.StatusNotFound, gin.H{"error": modelstore.NoSuchEntity.Error()})
 		return
 	}
 	var req model.CreateMemoRequest
@@ -114,7 +123,11 @@ func (r *Router) handleDeleteMemo(c *gin.Context) {
 		return
 	}
 	mem, err := r.store.GetMemo(memoId)
-	if err != nil {
+	if err == modelstore.NoSuchEntity {
+		logger.WithError(err).Error("unable to find memo in the store")
+		c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
+		return
+	} else if err != nil {
 		logger.WithError(err).Error("unable to get memo from the store")
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return

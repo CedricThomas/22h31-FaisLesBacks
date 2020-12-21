@@ -6,6 +6,7 @@ import (
 
 	"github.com/brianloveswords/airtable"
 
+	"github.com/CedricThomas/22h31-FaisLesBacks/internal/store/model"
 	"github.com/CedricThomas/22h31-FaisLesBacks/internal/store/model/memo"
 )
 
@@ -27,11 +28,9 @@ func (at *Storer) NewMemo(title, content, userId string) (*memo.Memo, error) {
 func (at *Storer) GetMemo(memoId string) (*memo.Memo, error) {
 	table := at.client.Table(memo.Memo{}.TableName())
 	var entity memo.Memo
-	if err := table.Get(memoId, &entity); err != nil {
-		if clientErr, ok := err.(airtable.ErrClientRequest); ok {
-			_ = clientErr
-
-		}
+	if err := table.Get(memoId, &entity); isNotFoundErr(err) {
+		return nil, model.NoSuchEntity
+	} else if err != nil {
 		return nil, err
 	}
 	return &entity, nil
@@ -59,7 +58,9 @@ func (at *Storer) UpdateMemo(memoId string, toUpdate *memo.Fields) (*memo.Memo, 
 		},
 		Fields: *toUpdate,
 	}
-	if err := table.Update(&entity); err != nil {
+	if err := table.Update(&entity); isNotFoundErr(err) {
+		return nil, model.NoSuchEntity
+	} else if err != nil {
 		return nil, err
 	}
 	return &entity, nil
@@ -67,9 +68,14 @@ func (at *Storer) UpdateMemo(memoId string, toUpdate *memo.Fields) (*memo.Memo, 
 
 func (at *Storer) DeleteMemo(memoId string) error {
 	table := at.client.Table(memo.Memo{}.TableName())
-	return table.Delete(&memo.Memo{
+	if err := table.Delete(&memo.Memo{
 		Record: airtable.Record{
 			ID: memoId,
 		},
-	})
+	}); isNotFoundErr(err) {
+		return model.NoSuchEntity
+	} else if err != nil {
+		return err
+	}
+	return nil
 }
