@@ -7,7 +7,7 @@ import (
 
 type Config struct {
 	Port        string   `env:"PORT" envDefault:":9090"`
-	Certificate string   `env:"CERTIFICATE,file" envDefault:"../../dev-dgoly5h6.pem" json:"-"`
+	Certificate string   `env:"CERTIFICATE,file" envDefault:"../../certificates/auth0.pem" json:"-"`
 	Issuer      string   `env:"ISSUER" envDefault:"https://dev-dgoly5h6.eu.auth0.com/"`
 	Audience    []string `env:"AUDIENCE" envDefault:"casseur_flutter"`
 	ApiKey      string   `env:"API_KEY,required"`
