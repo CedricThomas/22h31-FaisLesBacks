@@ -1,12 +1,14 @@
 package config
 
 import (
+	"fmt"
+
 	"github.com/caarlos0/env/v6"
 	"gopkg.in/square/go-jose.v2/json"
 )
 
 type Config struct {
-	Port        string   `env:"PORT" envDefault:":9090"`
+	Port        string   `env:"PORT" envDefault:"9090"`
 	Certificate string   `env:"CERTIFICATE,file" envDefault:"../../certificates/auth0.pem" json:"-"`
 	Issuer      string   `env:"ISSUER" envDefault:"https://dev-dgoly5h6.eu.auth0.com/"`
 	Audience    []string `env:"AUDIENCE" envDefault:"casseur_flutter"`
@@ -27,5 +29,7 @@ func NewConfig() (*Config, error) {
 	if err := env.Parse(&c); err != nil {
 		return nil, err
 	}
+	// Heroku override the variable and provide an invalid variable
+	c.Port = fmt.Sprintf(":%s", c.Port)
 	return &c, nil
 }
