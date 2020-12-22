@@ -18,7 +18,11 @@ func main() {
 	}
 	logger.WithField("config", cfg.String()).Info("configuration loaded")
 	engine := gin.Default()
-	r := router.NewRouter(logger, engine, cfg)
+	r, err := router.NewRouter(logger, engine, cfg)
+	if err != nil {
+		logger.WithError(err).Error("cannot create router")
+		os.Exit(1)
+	}
 	r.RegisterRoute()
 	if err := engine.Run(cfg.Port); err != nil {
 		logger.WithError(err).Error("runtime error")
