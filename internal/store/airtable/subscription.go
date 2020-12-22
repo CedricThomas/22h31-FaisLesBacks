@@ -8,7 +8,7 @@ func (at *Storer) NewSubscription(registrationId, userId string) (*subscription.
 	entity := subscription.Subscription{
 		Fields: subscription.Fields{
 			RegistrationId: registrationId,
-			UserId:  userId,
+			UserId:         userId,
 		},
 	}
 	table := at.client.Table(entity.TableName())
