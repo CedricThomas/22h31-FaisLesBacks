@@ -22,9 +22,22 @@ func (r *Router) handleCreateSubscription(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
+	logger := r.logger.WithField("registration_id", req.RegistrationId)
+	subs, err := r.store.ListSubscription(c.MustGet(middleware.Subject).(string))
+	if err != nil {
+		logger.WithError(err).Error("unable to list subscription from the store")
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	for _, subRegistered := range subs {
+		if subRegistered.Fields.RegistrationId == req.RegistrationId {
+			c.JSON(http.StatusAlreadyReported, subRegistered.ToModel())
+			return
+		}
+	}
 	sub, err := r.store.NewSubscription(req.RegistrationId, c.MustGet(middleware.Subject).(string))
 	if err != nil {
-		r.logger.WithError(err).Error("unable to create subscription")
+		logger.WithError(err).Error("unable to create subscription")
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
