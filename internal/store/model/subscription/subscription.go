@@ -23,6 +23,8 @@ func (Subscription) TableName() string {
 
 func (s *Subscription) ToModel() *model.Subscription {
 	return &model.Subscription{
-		RegistrationId: s.Fields.RegistrationId,
+		SubscriptionId:   s.ID,
+		RegistrationId:   s.Fields.RegistrationId,
+		RegistrationDate: s.CreatedTime,
 	}
 }

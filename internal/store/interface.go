@@ -15,4 +15,7 @@ type Store interface {
 
 	// Subscription
 	NewSubscription(registrationId, userId string) (*subscription.Subscription, error)
+	GetSubscription(registrationId string) (*subscription.Subscription, error)
+	ListSubscription(userId string) ([]subscription.Subscription, error)
+	DeleteSubscription(registrationId string) error
 }

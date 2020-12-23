@@ -41,7 +41,7 @@ func (r *Router) handleListMemo(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
-	var resp []*model.Memo
+	resp := make([]*model.Memo, 0, len(memos))
 	for _, mem := range memos {
 		resp = append(resp, mem.ToModel())
 	}
@@ -133,7 +133,7 @@ func (r *Router) handleDeleteMemo(c *gin.Context) {
 		return
 	}
 	if mem.Fields.UserId != c.MustGet(middleware.Subject).(string) {
-		c.JSON(http.StatusNotFound, gin.H{"error": "the memo was not found"})
+		c.JSON(http.StatusNotFound, gin.H{"error": modelstore.NoSuchEntity.Error()})
 		return
 	}
 	if err := r.store.DeleteMemo(memoId); err != nil {
