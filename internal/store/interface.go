@@ -24,4 +24,5 @@ type Store interface {
 
 	// Reminder
 	NewReminder(memoId, title, content string, reminderDate time.Time) (*reminder.Reminder, error)
+	ListReminder(memoId string) ([]reminder.Reminder, error)
 }

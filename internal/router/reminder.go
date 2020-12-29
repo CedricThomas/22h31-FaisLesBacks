@@ -14,6 +14,7 @@ import (
 
 func (r *Router) registerReminderRouter() {
 	r.engine.POST("/memo/:memoId/reminder", r.authMiddleware, r.handleCreateReminder)
+	r.engine.GET("/memo/:memoId/reminder", r.authMiddleware, r.handleListReminder)
 }
 
 func (r *Router) getMemoById(memoId string, userId string) (*memo.Memo, error) {
@@ -50,18 +51,55 @@ func (r *Router) handleCreateReminder(c *gin.Context) {
 	}
 	if _, err := r.getMemoById(memoId, c.MustGet(middleware.Subject).(string)); err == modelstore.NoSuchEntity {
 		logger.WithError(err).Error("cannot find memo")
-		c.JSON(http.StatusNotFound, gin.H{"error": "cannot find memo"})
+		c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
 		return
 	} else if err != nil {
 		logger.WithError(err).Error("unable to get memo from the store")
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "unable to get memo"})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 	reminder, err := r.store.NewReminder(memoId, req.Title, req.Content, req.Date)
 	if err != nil {
 		logger.WithError(err).Error("unable to create reminder")
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "unable to create reminder"})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 	c.JSON(http.StatusOK, reminder)
+}
+
+func (r *Router) handleListReminder(c *gin.Context) {
+	memoId := c.Params.ByName("memoId")
+	logger := r.logger.WithField("memo_id", memoId)
+	if len(memoId) == 0 {
+		logger.Error("invalid memo id")
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid memo id"})
+		return
+	}
+	if _, err := r.getMemoById(memoId, c.MustGet(middleware.Subject).(string)); err == modelstore.NoSuchEntity {
+		logger.WithError(err).Error("cannot find memo")
+		c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
+		return
+	} else if err != nil {
+		logger.WithError(err).Error("unable to get memo from the store")
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	reminders, err := r.store.ListReminder(memoId)
+	if err != nil {
+		logger.WithError(err).Error("unable to list reminder from the store")
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	resp := make([]*model.Reminder, 0, len(reminders))
+	for _, rem := range reminders {
+		resp = append(resp, &model.Reminder{
+			Id:        rem.ID,
+			CreatedAt: rem.CreatedTime,
+			Title:     rem.Fields.Title,
+			Content:   rem.Fields.Content,
+			Date:      rem.Fields.ReminderDate,
+			Triggered: rem.Fields.Triggered,
+		})
+	}
+	c.JSON(http.StatusOK, resp)
 }
