@@ -2,7 +2,6 @@ package reminder
 
 import (
 	"context"
-	"fmt"
 	"time"
 
 	"github.com/appleboy/go-fcm"
@@ -36,7 +35,6 @@ func (r *Reminder) GetDelay() time.Duration {
 func (r *Reminder) Trigger(ctx context.Context) {
 	r.logger.Info("reminder crontab triggered")
 	rems, err := r.store.ListReminderToTrigger()
-	fmt.Println(rems, err)
 	if err != nil {
 		r.logger.WithError(err).Error("unable to list reminder from store")
 		return
