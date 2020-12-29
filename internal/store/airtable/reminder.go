@@ -82,3 +82,14 @@ func (at *Storer) DeleteReminder(reminderId string) error {
 	}
 	return nil
 }
+
+func (at *Storer) ListReminderToTrigger() ([]reminder.Reminder, error) {
+	table := at.client.Table(reminder.Reminder{}.TableName())
+	var entities []reminder.Reminder
+	if err := table.List(&entities, &airtable.Options{
+		Filter: fmt.Sprintf("AND({reminder_date} >= NOW(), {triggered} = FALSE())"),
+	}); err != nil {
+		return nil, err
+	}
+	return entities, nil
+}

@@ -3,10 +3,14 @@ package main
 import (
 	"os"
 
+	"github.com/appleboy/go-fcm"
 	"github.com/gin-gonic/gin"
+	"github.com/oklog/run"
 
+	"github.com/CedricThomas/22h31-FaisLesBacks/internal/cron"
 	"github.com/CedricThomas/22h31-FaisLesBacks/internal/pkg/config"
 	"github.com/CedricThomas/22h31-FaisLesBacks/internal/router"
+	"github.com/CedricThomas/22h31-FaisLesBacks/internal/store/airtable"
 )
 
 func main() {
@@ -17,14 +21,24 @@ func main() {
 		os.Exit(1)
 	}
 	logger.WithField("config", cfg.String()).Info("configuration loaded")
-	engine := gin.Default()
-	r, err := router.NewRouter(logger, engine, cfg)
+
+	fcmClient, err := fcm.NewClient(cfg.FcmServerKey)
 	if err != nil {
-		logger.WithError(err).Error("cannot create router")
+		logger.WithError(err).Error("unable to create airtable store")
 		os.Exit(1)
 	}
-	r.RegisterRoute()
-	if err := engine.Run(cfg.Port); err != nil {
+	store := airtable.New(cfg.ApiKey, cfg.BaseID)
+
+	engine := gin.Default()
+	r := router.NewRouter(logger, engine, store, fcmClient, cfg)
+
+	crons := cron.New(logger, store, fcmClient)
+
+	var g run.Group
+	r.RegisterProcess(&g)
+	crons.RegisterProcess(&g)
+
+	if err := g.Run(); err != nil {
 		logger.WithError(err).Error("runtime error")
 		os.Exit(1)
 	}
