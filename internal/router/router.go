@@ -35,5 +35,6 @@ func NewRouter(logger *logrus.Logger, engine *gin.Engine, cfg *config.Config) (*
 
 func (r *Router) RegisterRoute() {
 	r.registerMemoRouter()
+	r.registerReminderRouter()
 	r.registerSubscriptionRouter()
 }

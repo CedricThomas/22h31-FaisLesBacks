@@ -1,7 +1,10 @@
 package store
 
 import (
+	"time"
+
 	"github.com/CedricThomas/22h31-FaisLesBacks/internal/store/model/memo"
+	"github.com/CedricThomas/22h31-FaisLesBacks/internal/store/model/reminder"
 	"github.com/CedricThomas/22h31-FaisLesBacks/internal/store/model/subscription"
 )
 
@@ -18,4 +21,7 @@ type Store interface {
 	GetSubscription(registrationId string) (*subscription.Subscription, error)
 	ListSubscription(userId string) ([]subscription.Subscription, error)
 	DeleteSubscription(registrationId string) error
+
+	// Reminder
+	NewReminder(memoId, title, content string, reminderDate time.Time) (*reminder.Reminder, error)
 }
