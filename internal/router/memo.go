@@ -95,7 +95,7 @@ func (r *Router) handleUpdateMemo(c *gin.Context) {
 		c.JSON(http.StatusNotFound, gin.H{"error": modelstore.NoSuchEntity.Error()})
 		return
 	}
-	var req model.CreateMemoRequest
+	var req model.UpdateMemoRequest
 	if err := c.BindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return

@@ -7,6 +7,10 @@ type CreateMemoRequest struct {
 	Content string `json:"content" binding:"required"`
 }
 
+type UpdateMemoRequest struct {
+	CreateMemoRequest
+}
+
 type Memo struct {
 	Id        string    `json:"id"`
 	CreatedAt time.Time `json:"created_at"`
