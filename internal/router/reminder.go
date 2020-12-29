@@ -16,6 +16,7 @@ func (r *Router) registerReminderRouter() {
 	r.engine.POST("/memo/:memoId/reminder", r.authMiddleware, r.handleCreateReminder)
 	r.engine.GET("/memo/:memoId/reminder", r.authMiddleware, r.handleListReminder)
 	r.engine.GET("/memo/:memoId/reminder/:reminderId", r.authMiddleware, r.handleGetReminder)
+	r.engine.PUT("/memo/:memoId/reminder/:reminderId", r.authMiddleware, r.handleUpdateReminder)
 	r.engine.DELETE("/memo/:memoId/reminder/:reminderId", r.authMiddleware, r.handleDeleteReminder)
 }
 
@@ -87,6 +88,19 @@ func (r *Router) handleGetReminder(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
+	if rem, err := r.store.GetReminder(reminderId); err == modelstore.NoSuchEntity {
+		logger.WithError(err).Error("cannot find reminder in the store")
+		c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
+		return
+	} else if err != nil {
+		logger.WithError(err).Error("unable to get reminder from the store")
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	} else if rem.Fields.MemoId != memoId {
+		logger.WithError(err).Error("reminder found but with invalid memo id")
+		c.JSON(http.StatusNotFound, gin.H{"error": modelstore.NoSuchEntity.Error()})
+		return
+	}
 	rem, err := r.store.GetReminder(reminderId)
 	if err == modelstore.NoSuchEntity {
 		logger.WithError(err).Error("cannot find reminder")
@@ -137,6 +151,56 @@ func (r *Router) handleListReminder(c *gin.Context) {
 	c.JSON(http.StatusOK, resp)
 }
 
+func (r *Router) handleUpdateReminder(c *gin.Context) {
+	memoId := c.Params.ByName("memoId")
+	reminderId := c.Params.ByName("reminderId")
+	logger := r.logger.WithField("memo_id", memoId).WithField("reminder_id", reminderId)
+	if len(memoId) == 0 || len(reminderId) == 0 {
+		logger.Error("invalid id")
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid id"})
+		return
+	}
+	var req model.UpdateReminderRequest
+	if err := c.BindJSON(&req); err != nil {
+		logger.WithError(err).Error("invalid request")
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	if _, err := r.getMemoById(memoId, c.MustGet(middleware.Subject).(string)); err == modelstore.NoSuchEntity {
+		logger.WithError(err).Error("cannot find memo")
+		c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
+		return
+	} else if err != nil {
+		logger.WithError(err).Error("unable to get memo from the store")
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	rem, err := r.store.GetReminder(reminderId)
+	if err == modelstore.NoSuchEntity {
+		logger.WithError(err).Error("cannot find reminder in the store")
+		c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
+		return
+	} else if err != nil {
+		logger.WithError(err).Error("unable to get reminder from the store")
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	} else if rem.Fields.MemoId != memoId {
+		logger.WithError(err).Error("reminder found but with invalid memo id")
+		c.JSON(http.StatusNotFound, gin.H{"error": modelstore.NoSuchEntity.Error()})
+		return
+	}
+	rem.Fields.Title = req.Title
+	rem.Fields.Content = req.Content
+	rem.Fields.ReminderDate = req.Date
+	updatedRem, err := r.store.UpdateReminder(reminderId, &rem.Fields)
+	if err != nil {
+		logger.WithError(err).Error("unable to update reminder in the store")
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, updatedRem.ToModel())
+}
+
 func (r *Router) handleDeleteReminder(c *gin.Context) {
 	memoId := c.Params.ByName("memoId")
 	reminderId := c.Params.ByName("reminderId")
@@ -155,11 +219,20 @@ func (r *Router) handleDeleteReminder(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
-	if err := r.store.DeleteReminder(reminderId); err == modelstore.NoSuchEntity {
+	if rem, err := r.store.GetReminder(reminderId); err == modelstore.NoSuchEntity {
 		logger.WithError(err).Error("cannot find reminder in the store")
 		c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
 		return
 	} else if err != nil {
+		logger.WithError(err).Error("unable to get reminder from the store")
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	} else if rem.Fields.MemoId != memoId {
+		logger.WithError(err).Error("reminder found but with invalid memo id")
+		c.JSON(http.StatusNotFound, gin.H{"error": modelstore.NoSuchEntity.Error()})
+		return
+	}
+	if err := r.store.DeleteReminder(reminderId); err != nil {
 		logger.WithError(err).Error("unable to remove reminder in the store")
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
