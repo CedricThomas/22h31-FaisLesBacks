@@ -11,10 +11,11 @@ import (
 	"github.com/CedricThomas/22h31-FaisLesBacks/internal/store/model/reminder"
 )
 
-func (at *Storer) NewReminder(memoId, title, content string, reminderDate time.Time) (*reminder.Reminder, error) {
+func (at *Storer) NewReminder(memoId, userId, title, content string, reminderDate time.Time) (*reminder.Reminder, error) {
 	entity := reminder.Reminder{
 		Fields: reminder.Fields{
 			MemoId:       memoId,
+			UserId:       userId,
 			Title:        title,
 			Content:      content,
 			ReminderDate: reminderDate,
@@ -87,7 +88,7 @@ func (at *Storer) ListReminderToTrigger() ([]reminder.Reminder, error) {
 	table := at.client.Table(reminder.Reminder{}.TableName())
 	var entities []reminder.Reminder
 	if err := table.List(&entities, &airtable.Options{
-		Filter: fmt.Sprintf("AND({reminder_date} >= NOW(), {triggered} = FALSE())"),
+		Filter: fmt.Sprintf("AND({reminder_date} <= NOW(), {triggered} = FALSE())"),
 	}); err != nil {
 		return nil, err
 	}

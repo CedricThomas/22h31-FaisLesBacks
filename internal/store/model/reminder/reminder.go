@@ -11,6 +11,7 @@ import (
 type (
 	Fields struct {
 		MemoId       string    `json:"memo_id"`
+		UserId       string    `json:"user_id"`
 		Title        string    `json:"title"`
 		Content      string    `json:"content"`
 		ReminderDate time.Time `json:"reminder_date"`

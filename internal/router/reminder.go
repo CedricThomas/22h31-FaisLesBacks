@@ -61,7 +61,7 @@ func (r *Router) handleCreateReminder(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
-	reminder, err := r.store.NewReminder(memoId, req.Title, req.Content, req.Date)
+	reminder, err := r.store.NewReminder(memoId, c.MustGet(middleware.Subject).(string), req.Title, req.Content, req.Date)
 	if err != nil {
 		logger.WithError(err).Error("unable to create reminder")
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})

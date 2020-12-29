@@ -23,7 +23,7 @@ type Store interface {
 	DeleteSubscription(registrationId string) error
 
 	// Reminder
-	NewReminder(memoId, title, content string, reminderDate time.Time) (*reminder.Reminder, error)
+	NewReminder(memoId, userId, title, content string, reminderDate time.Time) (*reminder.Reminder, error)
 	GetReminder(reminderId string) (*reminder.Reminder, error)
 	ListReminder(memoId string) ([]reminder.Reminder, error)
 	ListReminderToTrigger() ([]reminder.Reminder, error)
