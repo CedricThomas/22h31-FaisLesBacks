@@ -8,12 +8,13 @@ import (
 )
 
 type Config struct {
-	Port        string   `env:"PORT" envDefault:"9090"`
-	Certificate string   `env:"CERTIFICATE,file" envDefault:"../../certificates/auth0.pem" json:"-"`
-	Issuer      string   `env:"ISSUER" envDefault:"https://dev-dgoly5h6.eu.auth0.com/"`
-	Audience    []string `env:"AUDIENCE" envDefault:"casseur_flutter"`
-	ApiKey      string   `env:"API_KEY,required"`
-	BaseID      string   `env:"BASE_ID,required"`
+	Port         string   `env:"PORT" envDefault:"9090"`
+	Certificate  string   `env:"CERTIFICATE,file" envDefault:"../../certificates/auth0.pem" json:"-"`
+	Issuer       string   `env:"ISSUER" envDefault:"https://dev-dgoly5h6.eu.auth0.com/"`
+	Audience     []string `env:"AUDIENCE" envDefault:"casseur_flutter"`
+	ApiKey       string   `env:"API_KEY,required"`
+	BaseID       string   `env:"BASE_ID,required"`
+	FcmServerKey string   `env:"FCM_SERVER_KEY,required"`
 }
 
 func (c *Config) String() string {
