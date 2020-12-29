@@ -18,8 +18,8 @@ func New(apiKey, baseId string) *Storer {
 }
 
 func isNotFoundErr(err error) bool {
-	if clientErr, ok := err.(airtable.ErrClientRequest); ok {
-		return strings.Contains(clientErr.Err.Error(), "NOT_FOUND")
+	if err == nil {
+		return false
 	}
-	return false
+	return strings.Contains(err.Error(), "NOT_FOUND")
 }
