@@ -1,7 +1,6 @@
 package airtable
 
 import (
-	"errors"
 	"fmt"
 	"time"
 
@@ -51,23 +50,14 @@ func (at *Storer) ListReminder(memoId string) ([]reminder.Reminder, error) {
 	return entities, nil
 }
 
-func (at *Storer) UpdateReminder(reminderId string, fields *reminder.Fields) (*reminder.Reminder, error) {
-	if fields == nil {
-		return nil, errors.New("invalid update fields: nil received")
-	}
-	entity := &reminder.Reminder{
-		Record: airtable.Record{
-			ID: reminderId,
-		},
-		Fields: *fields,
-	}
-	table := at.client.Table(entity.TableName())
-	if err := table.Update(entity); isNotFoundErr(err) {
+func (at *Storer) UpdateReminder(fields *reminder.Reminder) (*reminder.Reminder, error) {
+	table := at.client.Table(fields.TableName())
+	if err := table.Update(fields); isNotFoundErr(err) {
 		return nil, model.NoSuchEntity
 	} else if err != nil {
 		return nil, err
 	}
-	return entity, nil
+	return fields, nil
 }
 
 func (at *Storer) DeleteAllReminder(memoId string) error {
