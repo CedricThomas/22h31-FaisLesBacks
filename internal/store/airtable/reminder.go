@@ -70,6 +70,19 @@ func (at *Storer) UpdateReminder(reminderId string, fields *reminder.Fields) (*r
 	return entity, nil
 }
 
+func (at *Storer) DeleteAllReminder(memoId string) error {
+	reminders, err := at.ListReminder(memoId)
+	if err != nil {
+		return err
+	}
+	for _, rem := range reminders {
+		if err := at.DeleteReminder(rem.ID); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
 func (at *Storer) DeleteReminder(reminderId string) error {
 	table := at.client.Table(reminder.Reminder{}.TableName())
 	if err := table.Delete(&reminder.Reminder{

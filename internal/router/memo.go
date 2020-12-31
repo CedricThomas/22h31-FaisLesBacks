@@ -149,6 +149,15 @@ func (r *Router) handleDeleteMemo(c *gin.Context) {
 		c.JSON(http.StatusNotFound, gin.H{"error": modelstore.NoSuchEntity.Error()})
 		return
 	}
+	if err := r.store.DeleteAllReminder(memoId); err == modelstore.NoSuchEntity {
+		logger.WithError(err).Error("unable to delete all reminder associated with memo")
+		c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
+		return
+	} else if err != nil {
+		logger.WithError(err).Error("unable to delete all reminder associated with memo")
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
 	if err := r.store.DeleteMemo(memoId); err != nil {
 		logger.WithError(err).Error("unable to remove memo in the store")
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})

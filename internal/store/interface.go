@@ -28,5 +28,6 @@ type Store interface {
 	ListReminder(memoId string) ([]reminder.Reminder, error)
 	ListReminderToTrigger() ([]reminder.Reminder, error)
 	UpdateReminder(reminderId string, reminder *reminder.Fields) (*reminder.Reminder, error)
+	DeleteAllReminder(memoId string) error
 	DeleteReminder(reminderId string) error
 }
