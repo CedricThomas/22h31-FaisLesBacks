@@ -8,9 +8,10 @@ import (
 
 type (
 	Fields struct {
-		Title   string `json:"title"`
-		Content string `json:"content"`
-		UserId  string `json:"user_id"`
+		Title    string `json:"title"`
+		Content  string `json:"content"`
+		UserId   string `json:"user_id"`
+		Location string `json:"location"`
 	}
 	Memo struct {
 		airtable.Record
@@ -28,5 +29,6 @@ func (m *Memo) ToModel() *model.Memo {
 		CreatedAt: m.CreatedTime,
 		Title:     m.Fields.Title,
 		Content:   m.Fields.Content,
+		Location:  m.Fields.Location,
 	}
 }

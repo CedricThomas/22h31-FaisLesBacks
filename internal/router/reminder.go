@@ -23,7 +23,7 @@ func (r *Router) registerReminderRouter() {
 func (r *Router) getMemoById(memoId string, userId string) (*memo.Memo, error) {
 	mem, err := r.store.GetMemo(memoId)
 	if err != nil {
-		r.logger.WithError(err).Error("unable to memo from store")
+		r.logger.WithError(err).Error("unable to get memo from store")
 		return nil, err
 	}
 	if mem.Fields.UserId != userId {

@@ -1,6 +1,7 @@
 package router
 
 import (
+	"fmt"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -8,7 +9,6 @@ import (
 	"github.com/CedricThomas/22h31-FaisLesBacks/api/model"
 	"github.com/CedricThomas/22h31-FaisLesBacks/internal/pkg/middleware"
 	modelstore "github.com/CedricThomas/22h31-FaisLesBacks/internal/store/model"
-	"github.com/CedricThomas/22h31-FaisLesBacks/internal/store/model/memo"
 )
 
 func (r *Router) registerMemoRouter() {
@@ -19,13 +19,27 @@ func (r *Router) registerMemoRouter() {
 	r.engine.DELETE("/memo/:memoId", r.authMiddleware, r.handleDeleteMemo)
 }
 
+func (r *Router) extractMemoLocation(location *model.Location) string {
+	if location == nil {
+		return ""
+	}
+	logger := r.logger.WithField("latitude", location.Latitude).WithField("longitude", location.Longitude)
+	addr, err := r.geoSolver.ReverseGeocode(location.Latitude, location.Longitude)
+	if err != nil {
+		logger.WithError(err).Error("unable to resolve geo location")
+		return "Outside france"
+	}
+	return fmt.Sprintf("%s %s, %s", addr.HouseNumber, addr.Street, addr.City)
+}
+
 func (r *Router) handleCreateMemo(c *gin.Context) {
 	var req model.CreateMemoRequest
 	if err := c.BindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
-	mem, err := r.store.NewMemo(req.Title, req.Content, c.MustGet(middleware.Subject).(string))
+	location := r.extractMemoLocation(req.Location)
+	mem, err := r.store.NewMemo(req.Title, req.Content, location, c.MustGet(middleware.Subject).(string))
 	if err != nil {
 		r.logger.WithError(err).Error("unable to create memo in the store")
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
@@ -100,11 +114,10 @@ func (r *Router) handleUpdateMemo(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
-	updatedMemo, err := r.store.UpdateMemo(memoId, &memo.Fields{
-		Title:   req.Title,
-		Content: req.Content,
-		UserId:  c.MustGet(middleware.Subject).(string),
-	})
+	mem.Fields.Title = req.Title
+	mem.Fields.Title = req.Content
+	mem.Fields.Location = r.extractMemoLocation(req.Location)
+	updatedMemo, err := r.store.UpdateMemo(mem)
 	if err != nil {
 		logger.WithError(err).Error("unable to update the memo from the store")
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
@@ -134,6 +147,15 @@ func (r *Router) handleDeleteMemo(c *gin.Context) {
 	}
 	if mem.Fields.UserId != c.MustGet(middleware.Subject).(string) {
 		c.JSON(http.StatusNotFound, gin.H{"error": modelstore.NoSuchEntity.Error()})
+		return
+	}
+	if err := r.store.DeleteAllReminder(memoId); err == modelstore.NoSuchEntity {
+		logger.WithError(err).Error("unable to delete all reminder associated with memo")
+		c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
+		return
+	} else if err != nil {
+		logger.WithError(err).Error("unable to delete all reminder associated with memo")
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 	if err := r.store.DeleteMemo(memoId); err != nil {
