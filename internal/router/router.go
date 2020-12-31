@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/appleboy/go-fcm"
+	"github.com/codingsince1985/geo-golang"
 	"github.com/gin-gonic/gin"
 	"github.com/oklog/run"
 	"github.com/sirupsen/logrus"
@@ -22,16 +23,18 @@ type Router struct {
 	authMiddleware gin.HandlerFunc
 	store          store.Store
 	fcmClient      *fcm.Client
+	geoSolver      geo.Geocoder
 	cfg            *config.Config
 }
 
-func NewRouter(logger *logrus.Logger, engine *gin.Engine, store *airtable.Storer, fcmClient *fcm.Client, cfg *config.Config) *Router {
+func NewRouter(logger *logrus.Logger, engine *gin.Engine, store *airtable.Storer, fcmClient *fcm.Client, geoSolver geo.Geocoder, cfg *config.Config) *Router {
 	r := &Router{
 		logger:         logger,
 		engine:         engine,
 		authMiddleware: middleware.Auth0(cfg.Certificate, cfg.Audience, cfg.Issuer),
 		store:          store,
 		fcmClient:      fcmClient,
+		geoSolver:      geoSolver,
 		cfg:            cfg,
 	}
 	r.registerRoute()

@@ -4,6 +4,7 @@ import (
 	"os"
 
 	"github.com/appleboy/go-fcm"
+	"github.com/codingsince1985/geo-golang/frenchapigouv"
 	"github.com/gin-gonic/gin"
 	"github.com/oklog/run"
 
@@ -22,6 +23,7 @@ func main() {
 	}
 	logger.WithField("config", cfg.String()).Info("configuration loaded")
 
+	geoSolver := frenchapigouv.Geocoder()
 	fcmClient, err := fcm.NewClient(cfg.FcmServerKey)
 	if err != nil {
 		logger.WithError(err).Error("unable to create airtable store")
@@ -30,7 +32,7 @@ func main() {
 	store := airtable.New(cfg.ApiKey, cfg.BaseID)
 
 	engine := gin.Default()
-	r := router.NewRouter(logger, engine, store, fcmClient, cfg)
+	r := router.NewRouter(logger, engine, store, fcmClient, geoSolver, cfg)
 
 	crons := cron.New(logger, store, fcmClient)
 

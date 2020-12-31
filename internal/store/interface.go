@@ -10,10 +10,10 @@ import (
 
 type Store interface {
 	// Memo
-	NewMemo(title, content, userId string) (*memo.Memo, error)
+	NewMemo(title, content, location, userId string) (*memo.Memo, error)
 	GetMemo(memoId string) (*memo.Memo, error)
 	ListMemo(userId string) ([]memo.Memo, error)
-	UpdateMemo(memoId string, memo *memo.Fields) (*memo.Memo, error)
+	UpdateMemo(memo *memo.Memo) (*memo.Memo, error)
 	DeleteMemo(memoId string) error
 
 	// Subscription
