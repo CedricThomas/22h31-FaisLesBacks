@@ -166,6 +166,11 @@ func (r *Router) handleUpdateReminder(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
+	if time.Now().After(req.Date) {
+		logger.Error("cannot create a reminder for the past")
+		c.JSON(http.StatusBadRequest, gin.H{"error": "cannot create a reminder for the past"})
+		return
+	}
 	if _, err := r.getMemoById(memoId, c.MustGet(middleware.Subject).(string)); err == modelstore.NoSuchEntity {
 		logger.WithError(err).Error("cannot find memo")
 		c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
@@ -188,11 +193,15 @@ func (r *Router) handleUpdateReminder(c *gin.Context) {
 		logger.WithError(err).Error("reminder found but with invalid memo id")
 		c.JSON(http.StatusNotFound, gin.H{"error": modelstore.NoSuchEntity.Error()})
 		return
+	} else if rem.Fields.Triggered {
+		logger.Error("cannot update a reminder already sent")
+		c.JSON(http.StatusConflict, gin.H{"error": "cannot update a reminder already sent"})
+		return
 	}
 	rem.Fields.Title = req.Title
 	rem.Fields.Content = req.Content
 	rem.Fields.ReminderDate = req.Date
-	updatedRem, err := r.store.UpdateReminder(reminderId, &rem.Fields)
+	updatedRem, err := r.store.UpdateReminder(rem)
 	if err != nil {
 		logger.WithError(err).Error("unable to update reminder in the store")
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})

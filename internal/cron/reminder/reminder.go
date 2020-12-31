@@ -84,7 +84,7 @@ func (r *Reminder) sendNotification(ctx context.Context, rem *reminder.Reminder)
 		}
 	}
 	rem.Fields.Triggered = true
-	if _, err := r.store.UpdateReminder(rem.ID, &rem.Fields); err != nil {
+	if _, err := r.store.UpdateReminder(rem); err != nil {
 		logger.WithError(err).Error("unable to update reminder")
 	}
 }
