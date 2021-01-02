@@ -78,6 +78,10 @@ func (r *Reminder) sendNotification(ctx context.Context, rem *reminder.Reminder)
 		if _, err := r.fcmClient.SendWithContext(ctx, &fcm.Message{
 			To:           sub.Fields.RegistrationId,
 			Notification: &notif,
+			Data: map[string]interface{}{
+				"memo_id": rem.Fields.MemoId,
+				"rem_id":  rem.ID,
+			},
 		}); err != nil {
 			logger.WithError(err).Error("unable to send message")
 			continue
