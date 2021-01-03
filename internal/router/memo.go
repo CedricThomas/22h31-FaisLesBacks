@@ -115,7 +115,7 @@ func (r *Router) handleUpdateMemo(c *gin.Context) {
 		return
 	}
 	mem.Fields.Title = req.Title
-	mem.Fields.Title = req.Content
+	mem.Fields.Content = req.Content
 	mem.Fields.Location = r.extractMemoLocation(req.Location)
 	updatedMemo, err := r.store.UpdateMemo(mem)
 	if err != nil {
